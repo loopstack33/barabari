@@ -48,7 +48,8 @@ class HistoryScreen extends StatelessWidget {
         separatorBuilder: (_, __) => const SizedBox(height: 10),
         itemBuilder: (context, index) {
           final entry = controller.history[index];
-          final breakdown = Breakdown.fromAmount(entry.gross) + Breakdown.fromAmount(entry.perks);
+          final breakdown = Breakdown.fromAmount(entry.gross, entry.split) +
+              Breakdown.fromAmount(entry.perks, entry.split);
           return Dismissible(
             key: ValueKey(entry.id),
             direction: DismissDirection.endToStart,
@@ -133,7 +134,7 @@ class _HistoryTile extends StatelessWidget {
               children: [
                 Text(dateLabel, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 14),
-                BreakdownCard(title: 'COMBINED TOTAL', breakdown: breakdown),
+                BreakdownCard(title: 'COMBINED TOTAL', breakdown: breakdown, split: entry.split),
               ],
             ),
           ),

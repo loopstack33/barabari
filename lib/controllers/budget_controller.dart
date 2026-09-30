@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/breakdown.dart';
 import '../models/budget_entry.dart';
+import '../models/expense.dart';
 import '../models/goal.dart';
 import '../models/split_percentages.dart';
 
@@ -13,6 +14,7 @@ class BudgetController extends GetxController {
   static const _goalsKey = 'budget_goals_v1';
   static const _currentKey = 'budget_current_v1';
   static const _splitKey = 'budget_split_v1';
+  static const _expensesKey = 'budget_expenses_v1';
 
   /// Current (unsaved) month inputs.
   final grossInput = 0.0.obs;
@@ -26,6 +28,9 @@ class BudgetController extends GetxController {
 
   /// Savings goals.
   final goals = <Goal>[].obs;
+
+  /// Logged spending history entries.
+  final expenses = <Expense>[].obs;
 
   final isLoading = true.obs;
 
@@ -63,13 +68,18 @@ class BudgetController extends GetxController {
     final historyRaw = _prefs?.getStringList(_historyKey) ?? <String>[];
     history.assignAll(
       historyRaw.map(
-            (e) => BudgetEntry.fromJson(jsonDecode(e) as Map<String, dynamic>),
+        (e) => BudgetEntry.fromJson(jsonDecode(e) as Map<String, dynamic>),
       ),
     );
 
     final goalsRaw = _prefs?.getStringList(_goalsKey) ?? <String>[];
     goals.assignAll(
       goalsRaw.map((e) => Goal.fromJson(jsonDecode(e) as Map<String, dynamic>)),
+    );
+
+    final expensesRaw = _prefs?.getStringList(_expensesKey) ?? <String>[];
+    expenses.assignAll(
+      expensesRaw.map((e) => Expense.fromJson(jsonDecode(e) as Map<String, dynamic>)),
     );
 
     final splitRaw = _prefs?.getString(_splitKey);
@@ -99,6 +109,13 @@ class BudgetController extends GetxController {
     await _prefs?.setStringList(
       _goalsKey,
       goals.map((e) => jsonEncode(e.toJson())).toList(),
+    );
+  }
+
+  Future<void> _persistExpenses() async {
+    await _prefs?.setStringList(
+      _expensesKey,
+      expenses.map((e) => jsonEncode(e.toJson())).toList(),
     );
   }
 
@@ -184,5 +201,63 @@ class BudgetController extends GetxController {
       if (g.id == id) return g;
     }
     return null;
+  }
+
+  // ------------------------------------------------------------- expenses
+
+  void addExpense({
+    required DateTime date,
+    required String category,
+    required double amount,
+    String? note,
+  }) {
+    if (amount <= 0) return;
+    expenses.add(
+      Expense(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        date: date,
+        category: category,
+        amount: amount,
+        note: (note != null && note.trim().isNotEmpty) ? note.trim() : null,
+      ),
+    );
+    _persistExpenses();
+  }
+
+  void deleteExpense(String id) {
+    expenses.removeWhere((e) => e.id == id);
+    _persistExpenses();
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  List<Expense> expensesForDay(DateTime day) {
+    final list = expenses.where((e) => _isSameDay(e.date, day)).toList();
+    list.sort((a, b) => b.date.compareTo(a.date));
+    return list;
+  }
+
+  List<Expense> expensesForMonth(DateTime month) {
+    final list = expenses
+        .where((e) => e.date.year == month.year && e.date.month == month.month)
+        .toList();
+    list.sort((a, b) => b.date.compareTo(a.date));
+    return list;
+  }
+
+  double totalForDay(DateTime day) =>
+      expensesForDay(day).fold(0.0, (sum, e) => sum + e.amount);
+
+  double totalForMonth(DateTime month) =>
+      expensesForMonth(month).fold(0.0, (sum, e) => sum + e.amount);
+
+  /// Category → total spent, for a given month (used for a per-category summary).
+  Map<String, double> categoryTotalsForMonth(DateTime month) {
+    final totals = <String, double>{};
+    for (final e in expensesForMonth(month)) {
+      totals[e.category] = (totals[e.category] ?? 0) + e.amount;
+    }
+    return totals;
   }
 }

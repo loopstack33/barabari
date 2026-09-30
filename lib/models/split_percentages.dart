@@ -39,11 +39,11 @@ class SplitPercentages {
   }
 
   Map<String, dynamic> toJson() => {
-    'use': use,
-    'invest': invest,
-    'lifestyle': lifestyle,
-    'emergencyFund': emergencyFund,
-  };
+        'use': use,
+        'invest': invest,
+        'lifestyle': lifestyle,
+        'emergencyFund': emergencyFund,
+      };
 
   factory SplitPercentages.fromJson(Map<String, dynamic> json) {
     return SplitPercentages(
@@ -51,7 +51,7 @@ class SplitPercentages {
       invest: (json['invest'] as num?)?.toDouble() ?? defaultSplit.invest,
       lifestyle: (json['lifestyle'] as num?)?.toDouble() ?? defaultSplit.lifestyle,
       emergencyFund:
-      (json['emergencyFund'] as num?)?.toDouble() ?? defaultSplit.emergencyFund,
+          (json['emergencyFund'] as num?)?.toDouble() ?? defaultSplit.emergencyFund,
     );
   }
 }
