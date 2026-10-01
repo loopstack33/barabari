@@ -3,8 +3,11 @@ import 'package:get/get.dart';
 
 import '../controllers/budget_controller.dart';
 import '../models/split_percentages.dart';
+import '../theme/app_theme.dart';
 import '../utils/currency.dart';
+import '../utils/route_transitions.dart';
 import '../widgets/breakdown_card.dart';
+import '../widgets/fade_slide_in.dart';
 import '../widgets/split_pie_chart.dart';
 import 'settings_screen.dart';
 
@@ -74,47 +77,56 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          BreakdownCard(
-            title: 'GROSS SALARY BREAKDOWN',
-            breakdown: controller.grossBreakdown,
-            split: controller.splitPercentages.value,
-            accentColor: const Color(0xFF2E7D6B),
-          ),
-          const SizedBox(height: 14),
-          BreakdownCard(
-            title: 'PERKS BREAKDOWN',
-            breakdown: controller.perksBreakdown,
-            split: controller.splitPercentages.value,
-            accentColor: const Color(0xFFB07D3D),
-          ),
-          const SizedBox(height: 14),
-          BreakdownCard(
-            title: 'COMBINED TOTAL',
-            breakdown: controller.combinedBreakdown,
-            split: controller.splitPercentages.value,
-            accentColor: const Color(0xFF3A3A86),
-          ),
-          const SizedBox(height: 14),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE7E4DC)),
+          FadeSlideIn(
+            delay: const Duration(milliseconds: 0),
+            child: BreakdownCard(
+              title: 'GROSS SALARY BREAKDOWN',
+              breakdown: controller.grossBreakdown,
+              accentColor: AppColors.invest,
             ),
-            child: Column(
-              children: [
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'YOUR SPLIT',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF4A4A45)),
+          ),
+          const SizedBox(height: 14),
+          FadeSlideIn(
+            delay: const Duration(milliseconds: 60),
+            child: BreakdownCard(
+              title: 'PERKS BREAKDOWN',
+              breakdown: controller.perksBreakdown,
+              accentColor: AppColors.lifestyle,
+            ),
+          ),
+          const SizedBox(height: 14),
+          FadeSlideIn(
+            delay: const Duration(milliseconds: 120),
+            child: BreakdownCard(
+              title: 'COMBINED TOTAL',
+              breakdown: controller.combinedBreakdown,
+              accentColor: AppColors.emergency,
+            ),
+          ),
+          const SizedBox(height: 14),
+          FadeSlideIn(
+            delay: const Duration(milliseconds: 180),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.card,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Column(
+                children: [
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'YOUR SPLIT',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF4A4A45)),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                SplitPieChart(split: controller.splitPercentages.value),
-              ],
+                  const SizedBox(height: 12),
+                  SplitPieChart(split: controller.splitPercentages.value),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 20),
@@ -202,9 +214,7 @@ class _SplitSummaryChip extends StatelessWidget {
 
       return InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const SettingsScreen()),
-        ),
+        onTap: () => Navigator.of(context).push(fadeScaleRoute(const SettingsScreen())),
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

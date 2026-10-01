@@ -3,7 +3,10 @@ import 'package:get/get.dart';
 
 import '../controllers/budget_controller.dart';
 import '../models/goal.dart';
-import '../utils/currency.dart';
+import '../theme/app_theme.dart';
+import '../widgets/animated_amount.dart';
+import '../widgets/animated_progress_bar.dart';
+import '../widgets/fade_slide_in.dart';
 
 class GoalsScreen extends StatelessWidget {
   const GoalsScreen({super.key});
@@ -15,10 +18,10 @@ class GoalsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: const Color(0xFF2E7D6B),
+        backgroundColor: AppColors.invest,
         onPressed: () => _showAddGoalSheet(context, controller),
-        icon: const Icon(Icons.add),
-        label: const Text('New goal'),
+        icon: const Icon(Icons.add, color: Colors.white,),
+        label: const Text('New goal',style: TextStyle(color: Colors.white),),
       ),
       body: Obx(() {
         if (controller.goals.isEmpty) {
@@ -30,7 +33,7 @@ class GoalsScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFF2E7D6B).withValues(alpha: 0.08),
+                color: AppColors.invest.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
@@ -38,20 +41,26 @@ class GoalsScreen extends StatelessWidget {
                 children: [
                   const Text(
                     'TOTAL SAVED',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF2E7D6B)),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.invest),
                   ),
-                  Text(
-                    formatPkr(controller.totalSaved),
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Color(0xFF2A2A26)),
+                  AnimatedAmount(
+                    value: controller.totalSaved,
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.ink),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
-            ...controller.goals.map((g) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
+            ...List.generate(controller.goals.length, (i) {
+              final g = controller.goals[i];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: FadeSlideIn(
+                  delay: Duration(milliseconds: 60 * i),
                   child: _GoalCard(goal: g, controller: controller),
-                )),
+                ),
+              );
+            }),
           ],
         );
       }),
@@ -65,17 +74,17 @@ class GoalsScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.savings_outlined, size: 48, color: Color(0xFFB7B4AB)),
+            const Icon(Icons.savings_outlined, size: 48, color: AppColors.muted),
             const SizedBox(height: 12),
             const Text(
               'No goals yet',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF2A2A26)),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.ink),
             ),
             const SizedBox(height: 6),
             const Text(
               'Add a goal to start tracking savings toward it, e.g. an emergency fund top-up or a big purchase.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Color(0xFF6B6A63)),
+              style: TextStyle(fontSize: 13, color: AppColors.inkSoft),
             ),
           ],
         ),
@@ -126,7 +135,7 @@ class GoalsScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  style: FilledButton.styleFrom(backgroundColor: const Color(0xFF2E7D6B)),
+                  style: FilledButton.styleFrom(backgroundColor: AppColors.invest),
                   onPressed: () {
                     final name = nameCtrl.text.trim();
                     final target = double.tryParse(targetCtrl.text) ?? 0;
@@ -156,9 +165,9 @@ class _GoalCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE7E4DC)),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,12 +178,12 @@ class _GoalCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   goal.name,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF2A2A26)),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.ink),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, size: 20, color: Color(0xFF9A968C)),
+                icon: const Icon(Icons.more_vert, size: 20, color: AppColors.muted),
                 onSelected: (v) {
                   if (v == 'delete') controller.deleteGoal(goal.id);
                 },
@@ -185,26 +194,30 @@ class _GoalCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: goal.progress,
-              minHeight: 8,
-              backgroundColor: const Color(0xFFEFEDE7),
-              color: goal.isComplete ? const Color(0xFF2E7D6B) : const Color(0xFFB07D3D),
-            ),
+          AnimatedProgressBar(
+            value: goal.progress,
+            color: goal.isComplete ? AppColors.invest : AppColors.lifestyle,
           ),
           const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '${formatPkr(goal.saved)} of ${formatPkr(goal.target)}',
-                style: const TextStyle(fontSize: 12, color: Color(0xFF6B6A63)),
+              Row(
+                children: [
+                  AnimatedAmount(
+                    value: goal.saved,
+                    style: const TextStyle(fontSize: 12, color: AppColors.inkSoft),
+                  ),
+                  const Text(' of ', style: TextStyle(fontSize: 12, color: AppColors.inkSoft)),
+                  AnimatedAmount(
+                    value: goal.target,
+                    style: const TextStyle(fontSize: 12, color: AppColors.inkSoft),
+                  ),
+                ],
               ),
               Text(
                 '${(goal.progress * 100).toStringAsFixed(0)}%',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF2A2A26)),
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink),
               ),
             ],
           ),

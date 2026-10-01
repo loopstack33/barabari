@@ -134,7 +134,7 @@ class _HistoryTile extends StatelessWidget {
               children: [
                 Text(dateLabel, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 14),
-                BreakdownCard(title: 'COMBINED TOTAL', breakdown: breakdown, split: entry.split),
+                BreakdownCard(title: 'COMBINED TOTAL', breakdown: breakdown),
               ],
             ),
           ),

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import 'controllers/budget_controller.dart';
 import 'screens/splash_screen.dart';
+import 'theme/app_theme.dart';
 
 void main() {
   Get.put(BudgetController());
@@ -17,11 +18,7 @@ class BarabriApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'Barabri',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: const Color(0xFF2E7D6B),
-        scaffoldBackgroundColor: const Color(0xFFF6F5F1),
-      ),
+      theme: buildAppTheme(),
       home: const SplashScreen(),
     );
   }

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../controllers/budget_controller.dart';
 import '../models/split_percentages.dart';
+import '../theme/app_theme.dart';
 import '../widgets/split_pie_chart.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -19,6 +20,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late double _invest;
   late double _lifestyle;
   late double _emergency;
+  late bool _charityEnabled;
+  late double _charityPercent;
 
   @override
   void initState() {
@@ -28,14 +31,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _invest = s.invest;
     _lifestyle = s.lifestyle;
     _emergency = s.emergencyFund;
+    _charityEnabled = s.charityEnabled;
+    _charityPercent = s.charityPercent;
   }
 
   SplitPercentages get _currentDraft => SplitPercentages(
-        use: _use,
-        invest: _invest,
-        lifestyle: _lifestyle,
-        emergencyFund: _emergency,
-      );
+    use: _use,
+    invest: _invest,
+    lifestyle: _lifestyle,
+    emergencyFund: _emergency,
+    charityEnabled: _charityEnabled,
+    charityPercent: _charityPercent,
+  );
 
   double get _total => _use + _invest + _lifestyle + _emergency;
   bool get _sumsToWhole => (_total - 100).abs() < 0.01;
@@ -43,24 +50,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F5F1),
-      appBar: AppBar(
-        title: const Text('Adjust split'),
-        backgroundColor: const Color(0xFFF6F5F1),
-        elevation: 0,
-        foregroundColor: const Color(0xFF2A2A26),
-      ),
+      backgroundColor: AppColors.bg,
+      appBar: AppBar(title: const Text('Adjust split')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         children: [
-          Center(child: SplitPieChart(split: _currentDraft, size: 180)),
+          Center(
+            child: AnimatedSize(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutCubic,
+              child: SplitPieChart(split: _currentDraft, size: 180),
+            ),
+          ),
           const SizedBox(height: 20),
+          _charityCard(),
+          const SizedBox(height: 16),
           _sumBanner(),
           const SizedBox(height: 20),
-          _slider('Use', kUseColor, _use, (v) => setState(() => _use = v)),
-          _slider('Invest', kInvestColor, _invest, (v) => setState(() => _invest = v)),
-          _slider('Lifestyle', kLifestyleColor, _lifestyle, (v) => setState(() => _lifestyle = v)),
-          _slider('Emergency Fund', kEmergencyColor, _emergency, (v) => setState(() => _emergency = v)),
+          _slider('Use', AppColors.use, _use, (v) => setState(() => _use = v)),
+          _slider('Invest', AppColors.invest, _invest, (v) => setState(() => _invest = v)),
+          _slider('Lifestyle', AppColors.lifestyle, _lifestyle, (v) => setState(() => _lifestyle = v)),
+          _slider('Emergency Fund', AppColors.emergency, _emergency, (v) => setState(() => _emergency = v)),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -80,7 +90,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: FilledButton(
-                  style: FilledButton.styleFrom(backgroundColor: const Color(0xFF2E7D6B)),
+                  style: FilledButton.styleFrom(backgroundColor: AppColors.invest),
                   onPressed: () {
                     controller.setSplit(_currentDraft);
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -99,16 +109,86 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 12),
           const Text(
             'Note: past saved months in History keep whichever split was '
-            'active when they were saved — changing this won\'t rewrite them.',
-            style: TextStyle(fontSize: 12, color: Color(0xFF6B6A63)),
+                'active when they were saved — changing this won\'t rewrite them.',
+            style: TextStyle(fontSize: 12, color: AppColors.inkSoft),
           ),
         ],
       ),
     );
   }
 
+  Widget _charityCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 10,
+                height: 10,
+                decoration: const BoxDecoration(color: AppColors.sadaqah, shape: BoxShape.circle),
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Give in the way of Allah (Sadaqah)',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink),
+                ),
+              ),
+              Switch(
+                value: _charityEnabled,
+                onChanged: (v) => setState(() => _charityEnabled = v),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Taken off the top before the rest is split — Use, Invest, '
+                'Lifestyle and Emergency Fund automatically shrink to fit what\'s left.',
+            style: TextStyle(fontSize: 12, color: AppColors.inkSoft),
+          ),
+          if (_charityEnabled) ...[
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Percentage', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                Text(
+                  '${_charityPercent.toStringAsFixed(_charityPercent % 1 == 0 ? 0 : 1)}%',
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.sadaqah),
+                ),
+              ],
+            ),
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                activeTrackColor: AppColors.sadaqah,
+                thumbColor: AppColors.sadaqah,
+                overlayColor: AppColors.sadaqah.withValues(alpha: 0.15),
+                inactiveTrackColor: AppColors.border,
+              ),
+              child: Slider(
+                value: _charityPercent,
+                min: 0,
+                max: 50,
+                divisions: 100,
+                onChanged: (v) => setState(() => _charityPercent = v),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _sumBanner() {
-    final color = _sumsToWhole ? const Color(0xFF2E7D6B) : const Color(0xFFC1666B);
+    final color = _sumsToWhole ? AppColors.invest : AppColors.use;
     final label = _sumsToWhole
         ? 'Adds up to ${_total.toStringAsFixed(_total % 1 == 0 ? 0 : 1)}% ✓'
         : 'Adds up to ${_total.toStringAsFixed(_total % 1 == 0 ? 0 : 1)}% — not 100%';
@@ -153,7 +233,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               Text(
                 '${value.toStringAsFixed(value % 1 == 0 ? 0 : 1)}%',
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF2A2A26)),
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink),
               ),
             ],
           ),
@@ -162,7 +242,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               activeTrackColor: color,
               thumbColor: color,
               overlayColor: color.withValues(alpha: 0.15),
-              inactiveTrackColor: const Color(0xFFE7E4DC),
+              inactiveTrackColor: AppColors.border,
             ),
             child: Slider(
               value: value,

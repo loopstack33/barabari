@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_theme.dart';
+import '../utils/route_transitions.dart';
 import 'dashboard_screen.dart';
 import 'expenses_screen.dart';
 import 'goals_screen.dart';
@@ -31,24 +33,25 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Text(_titles[_index]),
         centerTitle: false,
-        backgroundColor: const Color(0xFFF6F5F1),
-        elevation: 0,
-        foregroundColor: const Color(0xFF2A2A26),
         actions: [
           IconButton(
             icon: const Icon(Icons.tune),
             tooltip: 'Adjust split',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const SettingsScreen()),
-            ),
+            onPressed: () => Navigator.of(context).push(fadeScaleRoute(const SettingsScreen())),
           ),
         ],
       ),
-      body: _screens[_index],
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 260),
+        switchInCurve: Curves.easeOut,
+        switchOutCurve: Curves.easeIn,
+        transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+        child: KeyedSubtree(key: ValueKey(_index), child: _screens[_index]),
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.card,
         destinations: const [
           NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: 'Dashboard'),
           NavigationDestination(icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: 'Spending'),

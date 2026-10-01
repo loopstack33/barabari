@@ -2,12 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../models/split_percentages.dart';
-
-/// Colors match the app's icon/logo mark for visual consistency.
-const kUseColor = Color(0xFFC1666B);
-const kInvestColor = Color(0xFF2E7D6B);
-const kLifestyleColor = Color(0xFFB07D3D);
-const kEmergencyColor = Color(0xFF3A3A86);
+import '../theme/app_theme.dart';
 
 class SplitPieChart extends StatelessWidget {
   const SplitPieChart({
@@ -21,16 +16,20 @@ class SplitPieChart extends StatelessWidget {
   final double size;
   final bool showLegend;
 
-  static const _entries = [
-    ('Use', kUseColor),
-    ('Invest', kInvestColor),
-    ('Lifestyle', kLifestyleColor),
-    ('Emergency Fund', kEmergencyColor),
-  ];
-
   @override
   Widget build(BuildContext context) {
-    final values = [split.use, split.invest, split.lifestyle, split.emergencyFund];
+    final eff = split.effectivePercentages;
+
+    // Build the entry list dynamically so the Sadaqah slice only appears
+    // when it's actually enabled, instead of always reserving a slot for it.
+    final entries = <(String, Color, double)>[
+      if (split.charityEnabled && eff['charity']! > 0)
+        ('Sadaqah', AppColors.sadaqah, eff['charity']!),
+      ('Use', AppColors.use, eff['use']!),
+      ('Invest', AppColors.invest, eff['invest']!),
+      ('Lifestyle', AppColors.lifestyle, eff['lifestyle']!),
+      ('Emergency Fund', AppColors.emergency, eff['emergencyFund']!),
+    ];
 
     return Column(
       children: [
@@ -38,17 +37,18 @@ class SplitPieChart extends StatelessWidget {
           height: size,
           width: size,
           child: PieChart(
+            swapAnimationDuration: const Duration(milliseconds: 450),
+            swapAnimationCurve: Curves.easeOutCubic,
             PieChartData(
-              sections: List.generate(_entries.length, (i) {
-                final (_, color) = _entries[i];
-                final value = values[i];
+              sections: entries.map((e) {
+                final (_, color, value) = e;
                 return PieChartSectionData(
                   value: value <= 0 ? 0.0001 : value,
                   color: color,
                   radius: size * 0.22,
                   showTitle: false,
                 );
-              }),
+              }).toList(),
               sectionsSpace: 2,
               centerSpaceRadius: size * 0.18,
             ),
@@ -60,9 +60,8 @@ class SplitPieChart extends StatelessWidget {
             spacing: 14,
             runSpacing: 8,
             alignment: WrapAlignment.center,
-            children: List.generate(_entries.length, (i) {
-              final (label, color) = _entries[i];
-              final value = values[i];
+            children: entries.map((e) {
+              final (label, color, value) = e;
               final pctLabel = value % 1 == 0 ? value.toInt().toString() : value.toStringAsFixed(1);
               return Row(
                 mainAxisSize: MainAxisSize.min,
@@ -79,7 +78,7 @@ class SplitPieChart extends StatelessWidget {
                   ),
                 ],
               );
-            }),
+            }).toList(),
           ),
         ],
       ],
