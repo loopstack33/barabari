@@ -72,13 +72,13 @@ class SplitPercentages {
   }
 
   Map<String, dynamic> toJson() => {
-    'use': use,
-    'invest': invest,
-    'lifestyle': lifestyle,
-    'emergencyFund': emergencyFund,
-    'charityEnabled': charityEnabled,
-    'charityPercent': charityPercent,
-  };
+        'use': use,
+        'invest': invest,
+        'lifestyle': lifestyle,
+        'emergencyFund': emergencyFund,
+        'charityEnabled': charityEnabled,
+        'charityPercent': charityPercent,
+      };
 
   factory SplitPercentages.fromJson(Map<String, dynamic> json) {
     return SplitPercentages(
@@ -86,7 +86,7 @@ class SplitPercentages {
       invest: (json['invest'] as num?)?.toDouble() ?? defaultSplit.invest,
       lifestyle: (json['lifestyle'] as num?)?.toDouble() ?? defaultSplit.lifestyle,
       emergencyFund:
-      (json['emergencyFund'] as num?)?.toDouble() ?? defaultSplit.emergencyFund,
+          (json['emergencyFund'] as num?)?.toDouble() ?? defaultSplit.emergencyFund,
       // Entries saved before this feature existed won't have these keys —
       // default to charity off, matching prior behavior exactly.
       charityEnabled: json['charityEnabled'] as bool? ?? false,

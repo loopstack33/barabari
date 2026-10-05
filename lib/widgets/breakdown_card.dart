@@ -9,15 +9,16 @@ class BreakdownCard extends StatelessWidget {
     super.key,
     required this.title,
     required this.breakdown,
-    this.accentColor = AppColors.invest,
+    this.accentColor,
   });
 
   final String title;
   final Breakdown breakdown;
-  final Color accentColor;
+  final Color? accentColor;
 
   @override
   Widget build(BuildContext context) {
+    final accentColor = this.accentColor ?? AppColors.invest;
     final total = breakdown.total;
     // Percentages are derived straight from the computed amounts, so they're
     // always correct whether or not Sadaqah is enabled — no separate
@@ -80,18 +81,18 @@ class BreakdownCard extends StatelessWidget {
           width: 40,
           child: Text(
             pct,
-            style: const TextStyle(fontSize: 11, color: AppColors.muted),
+            style: TextStyle(fontSize: 11, color: AppColors.muted),
           ),
         ),
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(fontSize: 13, color: AppColors.ink),
+            style: TextStyle(fontSize: 13, color: AppColors.ink),
           ),
         ),
         AnimatedAmount(
           value: amount,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink),
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink),
         ),
       ],
     );

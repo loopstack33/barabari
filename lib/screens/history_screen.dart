@@ -7,9 +7,31 @@ import '../models/breakdown.dart';
 import '../models/budget_entry.dart';
 import '../utils/currency.dart';
 import '../widgets/breakdown_card.dart';
+import '../theme/app_theme.dart';
 
 class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
+
+  void _confirmClearAll(BuildContext context, BudgetController controller) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Clear all history?'),
+        content: const Text('This removes every saved month. This can\'t be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.use),
+            onPressed: () {
+              controller.clearHistory();
+              Navigator.pop(ctx);
+            },
+            child: const Text('Clear all'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,18 +45,18 @@ class HistoryScreen extends StatelessWidget {
             padding: const EdgeInsets.all(32),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: const [
-                Icon(Icons.history, size: 48, color: Color(0xFFB7B4AB)),
-                SizedBox(height: 12),
+              children: [
+                Icon(Icons.history, size: 48, color: AppColors.muted),
+                const SizedBox(height: 12),
                 Text(
                   'No saved months yet',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF2A2A26)),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.ink),
                 ),
-                SizedBox(height: 6),
+                const SizedBox(height: 6),
                 Text(
                   'Save a month from the Dashboard tab to start building your history.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 13, color: Color(0xFF6B6A63)),
+                  style: TextStyle(fontSize: 13, color: AppColors.inkSoft),
                 ),
               ],
             ),
@@ -42,41 +64,64 @@ class HistoryScreen extends StatelessWidget {
         );
       }
 
-      return ListView.separated(
+      return ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-        itemCount: controller.history.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 10),
-        itemBuilder: (context, index) {
-          final entry = controller.history[index];
-          final breakdown = Breakdown.fromAmount(entry.gross, entry.split) +
-              Breakdown.fromAmount(entry.perks, entry.split);
-          return Dismissible(
-            key: ValueKey(entry.id),
-            direction: DismissDirection.endToStart,
-            background: Container(
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.only(right: 20),
-              decoration: BoxDecoration(
-                color: const Color(0xFFC65D4A),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Icon(Icons.delete_outline, color: Colors.white),
+        children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: () => _confirmClearAll(context, controller),
+              icon: Icon(Icons.delete_sweep_outlined, size: 18, color: AppColors.use),
+              label: Text('Clear all', style: TextStyle(color: AppColors.use, fontSize: 13)),
             ),
-            onDismissed: (_) => controller.deleteHistoryEntry(entry.id),
-            child: _HistoryTile(entry: entry, breakdown: breakdown, dateLabel: dateFmt.format(entry.date)),
-          );
-        },
+          ),
+          const SizedBox(height: 4),
+          ...List.generate(controller.history.length, (index) {
+            final entry = controller.history[index];
+            final breakdown = Breakdown.fromAmount(entry.gross, entry.split) +
+                Breakdown.fromAmount(entry.perks, entry.split);
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Dismissible(
+                key: ValueKey(entry.id),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 20),
+                  decoration: BoxDecoration(
+                    color: AppColors.use,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(Icons.delete_outline, color: Colors.white),
+                ),
+                onDismissed: (_) => controller.deleteHistoryEntry(entry.id),
+                child: _HistoryTile(
+                  entry: entry,
+                  breakdown: breakdown,
+                  dateLabel: dateFmt.format(entry.date),
+                  onDelete: () => controller.deleteHistoryEntry(entry.id),
+                ),
+              ),
+            );
+          }),
+        ],
       );
     });
   }
 }
 
 class _HistoryTile extends StatelessWidget {
-  const _HistoryTile({required this.entry, required this.breakdown, required this.dateLabel});
+  const _HistoryTile({
+    required this.entry,
+    required this.breakdown,
+    required this.dateLabel,
+    required this.onDelete,
+  });
 
   final BudgetEntry entry;
   final Breakdown breakdown;
   final String dateLabel;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -86,9 +131,9 @@ class _HistoryTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.card,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE7E4DC)),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
@@ -96,18 +141,23 @@ class _HistoryTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(dateLabel, style: const TextStyle(fontSize: 12, color: Color(0xFF6B6A63))),
+                  Text(dateLabel, style: TextStyle(fontSize: 12, color: AppColors.inkSoft)),
                   const SizedBox(height: 4),
                   Text(
                     'Gross ${formatPkr(entry.gross)} · Perks ${formatPkr(entry.perks)}',
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF2A2A26)),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink),
                   ),
                 ],
               ),
             ),
             Text(
               formatPkr(entry.total),
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF2E7D6B)),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.invest),
+            ),
+            IconButton(
+              icon: Icon(Icons.delete_outline, size: 20, color: AppColors.muted),
+              tooltip: 'Delete',
+              onPressed: onDelete,
             ),
           ],
         ),
@@ -124,7 +174,7 @@ class _HistoryTile extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFFF6F5F1),
+            color: AppColors.bg,
             borderRadius: BorderRadius.circular(20),
           ),
           child: SingleChildScrollView(

@@ -15,11 +15,16 @@ class BarabriApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      title: 'Barabri',
-      debugShowCheckedModeBanner: false,
-      theme: buildAppTheme(),
-      home: const SplashScreen(),
+    final controller = Get.find<BudgetController>();
+    // Obx here makes the whole app rebuild when the theme changes, so every
+    // AppColors.* getter re-reads the newly active preset.
+    return Obx(
+      () => GetMaterialApp(
+        title: 'Barabri',
+        debugShowCheckedModeBanner: false,
+        theme: buildAppTheme(controller.activeTheme.value),
+        home: const SplashScreen(),
+      ),
     );
   }
 }

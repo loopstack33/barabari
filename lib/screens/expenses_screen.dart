@@ -6,6 +6,7 @@ import 'package:table_calendar/table_calendar.dart';
 import '../controllers/budget_controller.dart';
 import '../models/expense.dart';
 import '../utils/currency.dart';
+import '../theme/app_theme.dart';
 
 class ExpensesScreen extends StatefulWidget {
   const ExpensesScreen({super.key});
@@ -29,10 +30,10 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: const Color(0xFF2E7D6B),
+        backgroundColor: AppColors.invest,
         onPressed: () => _showAddExpenseSheet(context),
-        icon: const Icon(Icons.add, color: Colors.white,),
-        label: const Text('Add Spend',style: TextStyle(color: Colors.white),),
+        icon: const Icon(Icons.add,color: Colors.white,),
+        label: const Text('Add spend',style: TextStyle(color: Colors.white,),),
       ),
       body: Obx(() {
         final dayExpenses = controller.expensesForDay(_selectedDay);
@@ -44,9 +45,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           children: [
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.card,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE7E4DC)),
+                border: Border.all(color: AppColors.border),
               ),
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: TableCalendar<Expense>(
@@ -64,20 +65,20 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   });
                 },
                 eventLoader: (day) => controller.expensesForDay(day),
-                calendarStyle: const CalendarStyle(
-                  todayDecoration: BoxDecoration(color: Color(0xFFB07D3D), shape: BoxShape.circle),
-                  selectedDecoration: BoxDecoration(color: Color(0xFF2E7D6B), shape: BoxShape.circle),
-                  markerDecoration: BoxDecoration(color: Color(0xFFC1666B), shape: BoxShape.circle),
+                calendarStyle: CalendarStyle(
+                  todayDecoration: BoxDecoration(color: AppColors.lifestyle, shape: BoxShape.circle),
+                  selectedDecoration: BoxDecoration(color: AppColors.invest, shape: BoxShape.circle),
+                  markerDecoration: BoxDecoration(color: AppColors.use, shape: BoxShape.circle),
                   outsideDaysVisible: false,
                 ),
-                headerStyle: const HeaderStyle(
+                headerStyle: HeaderStyle(
                   formatButtonVisible: true,
                   titleCentered: true,
                   formatButtonDecoration: BoxDecoration(
-                    color: Color(0xFFEFEDE7),
+                    color: AppColors.border,
                     borderRadius: BorderRadius.all(Radius.circular(8)),
                   ),
-                  formatButtonTextStyle: TextStyle(fontSize: 12, color: Color(0xFF4A4A45)),
+                  formatButtonTextStyle: TextStyle(fontSize: 12, color: AppColors.inkSoft),
                 ),
               ),
             ),
@@ -88,7 +89,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   child: _totalCard(
                     label: DateFormat('MMM d').format(_selectedDay),
                     amount: dayTotal,
-                    color: const Color(0xFF2E7D6B),
+                    color: AppColors.invest,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -96,7 +97,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   child: _totalCard(
                     label: DateFormat('MMMM').format(_focusedDay),
                     amount: monthTotal,
-                    color: const Color(0xFF3A3A86),
+                    color: AppColors.emergency,
                   ),
                 ),
               ],
@@ -104,7 +105,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             const SizedBox(height: 16),
             Text(
               DateFormat('EEEE, MMM d').format(_selectedDay),
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF2A2A26)),
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink),
             ),
             const SizedBox(height: 10),
             if (dayExpenses.isEmpty)
@@ -113,7 +114,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 child: Center(
                   child: Text(
                     'No spending logged for this day',
-                    style: const TextStyle(fontSize: 13, color: Color(0xFF6B6A63)),
+                    style: TextStyle(fontSize: 13, color: AppColors.inkSoft),
                   ),
                 ),
               )
@@ -127,7 +128,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                         alignment: Alignment.centerRight,
                         padding: const EdgeInsets.only(right: 20),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFC1666B),
+                          color: AppColors.use,
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: const Icon(Icons.delete_outline, color: Colors.white),
@@ -157,7 +158,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           const SizedBox(height: 4),
           Text(
             formatPkr(amount),
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF2A2A26)),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.ink),
           ),
         ],
       ),
@@ -168,16 +169,16 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE7E4DC)),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: const Color(0xFFEFEDE7),
+              color: AppColors.border,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(e.category, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
@@ -186,13 +187,13 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           Expanded(
             child: Text(
               e.note?.isNotEmpty == true ? e.note! : '—',
-              style: const TextStyle(fontSize: 12, color: Color(0xFF6B6A63)),
+              style: TextStyle(fontSize: 12, color: AppColors.inkSoft),
               overflow: TextOverflow.ellipsis,
             ),
           ),
           Text(
             formatPkr(e.amount),
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF2A2A26)),
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink),
           ),
         ],
       ),
@@ -208,7 +209,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.card,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) {
         return StatefulBuilder(
@@ -266,7 +267,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                       decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFFBDBAB2)),
+                        border: Border.all(color: AppColors.border),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Row(
@@ -282,7 +283,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
-                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFF2E7D6B)),
+                      style: FilledButton.styleFrom(backgroundColor: AppColors.invest),
                       onPressed: () {
                         final amount = double.tryParse(amountCtrl.text) ?? 0;
                         if (amount <= 0) return;

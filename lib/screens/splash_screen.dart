@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../controllers/budget_controller.dart';
 import 'home_screen.dart';
+import '../theme/app_theme.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -51,7 +52,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F5F1),
+      backgroundColor: Colors.white,
       body: Center(
         child: FadeTransition(
           opacity: _fade,
@@ -60,23 +61,12 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(32),
-                  child: Image.asset(
-                    'assets/icon/app_icon.png',
-                    width: 128,
-                    height: 128,
-                  ),
+                Image.asset(
+                  'assets/icon/spLogo.png',
                 ),
-                const SizedBox(height: 22),
-                const Text(
-                  'Barabri',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: Color(0xFF2A2A26)),
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  'balance your income, on purpose',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF6B6A63)),
+                Text(
+                  'Balance your income, on purpose',
+                  style: TextStyle(fontSize: 14, color: AppColors.inkSoft, fontWeight: FontWeight.w600),
                 ),
               ],
             ),

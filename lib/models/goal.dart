@@ -15,7 +15,7 @@ class Goal {
   double get progress {
     if (target <= 0) return 0;
     final p = saved / target;
-    return p.clamp(0, 1);
+    return p.clamp(0, 1).toDouble();
   }
 
   bool get isComplete => saved >= target && target > 0;

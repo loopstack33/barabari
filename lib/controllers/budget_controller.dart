@@ -8,6 +8,7 @@ import '../models/budget_entry.dart';
 import '../models/expense.dart';
 import '../models/goal.dart';
 import '../models/split_percentages.dart';
+import '../theme/app_theme_presets.dart';
 
 class BudgetController extends GetxController {
   static const _historyKey = 'budget_history_v1';
@@ -15,6 +16,7 @@ class BudgetController extends GetxController {
   static const _currentKey = 'budget_current_v1';
   static const _splitKey = 'budget_split_v1';
   static const _expensesKey = 'budget_expenses_v1';
+  static const _themeKey = 'budget_theme_v1';
 
   /// Current (unsaved) month inputs.
   final grossInput = 0.0.obs;
@@ -22,6 +24,9 @@ class BudgetController extends GetxController {
 
   /// The currently active split percentages (adjustable in Settings).
   final splitPercentages = SplitPercentages.defaultSplit.obs;
+
+  /// The currently active app-wide color theme.
+  final activeTheme = kThemeBarabri.obs;
 
   /// Saved months, most recent first.
   final history = <BudgetEntry>[].obs;
@@ -88,6 +93,11 @@ class BudgetController extends GetxController {
           SplitPercentages.fromJson(jsonDecode(splitRaw) as Map<String, dynamic>);
     }
 
+    final themeId = _prefs?.getString(_themeKey);
+    if (themeId != null) {
+      activeTheme.value = themeById(themeId);
+    }
+
     isLoading.value = false;
   }
 
@@ -132,6 +142,11 @@ class BudgetController extends GetxController {
 
   void resetSplitToDefault() => setSplit(SplitPercentages.defaultSplit);
 
+  Future<void> setTheme(AppThemeOption theme) async {
+    activeTheme.value = theme;
+    await _prefs?.setString(_themeKey, theme.id);
+  }
+
   // ------------------------------------------------------------- mutations
 
   void setGross(double value) {
@@ -161,6 +176,11 @@ class BudgetController extends GetxController {
 
   void deleteHistoryEntry(String id) {
     history.removeWhere((e) => e.id == id);
+    _persistHistory();
+  }
+
+  void clearHistory() {
+    history.clear();
     _persistHistory();
   }
 

@@ -20,8 +20,8 @@ class GoalsScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: AppColors.invest,
         onPressed: () => _showAddGoalSheet(context, controller),
-        icon: const Icon(Icons.add, color: Colors.white,),
-        label: const Text('New goal',style: TextStyle(color: Colors.white),),
+        icon: const Icon(Icons.add,color: Colors.white,),
+        label: const Text('New goal',style: TextStyle(color: Colors.white,),),
       ),
       body: Obx(() {
         if (controller.goals.isEmpty) {
@@ -39,13 +39,13 @@ class GoalsScreen extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'TOTAL SAVED',
                     style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.invest),
                   ),
                   AnimatedAmount(
                     value: controller.totalSaved,
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.ink),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.ink),
                   ),
                 ],
               ),
@@ -74,14 +74,14 @@ class GoalsScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.savings_outlined, size: 48, color: AppColors.muted),
+            Icon(Icons.savings_outlined, size: 48, color: AppColors.muted),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               'No goals yet',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.ink),
             ),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'Add a goal to start tracking savings toward it, e.g. an emergency fund top-up or a big purchase.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, color: AppColors.inkSoft),
@@ -178,12 +178,12 @@ class _GoalCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   goal.name,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.ink),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.ink),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, size: 20, color: AppColors.muted),
+                icon: Icon(Icons.more_vert, size: 20, color: AppColors.muted),
                 onSelected: (v) {
                   if (v == 'delete') controller.deleteGoal(goal.id);
                 },
@@ -206,18 +206,18 @@ class _GoalCard extends StatelessWidget {
                 children: [
                   AnimatedAmount(
                     value: goal.saved,
-                    style: const TextStyle(fontSize: 12, color: AppColors.inkSoft),
+                    style: TextStyle(fontSize: 12, color: AppColors.inkSoft),
                   ),
-                  const Text(' of ', style: TextStyle(fontSize: 12, color: AppColors.inkSoft)),
+                  Text(' of ', style: TextStyle(fontSize: 12, color: AppColors.inkSoft)),
                   AnimatedAmount(
                     value: goal.target,
-                    style: const TextStyle(fontSize: 12, color: AppColors.inkSoft),
+                    style: TextStyle(fontSize: 12, color: AppColors.inkSoft),
                   ),
                 ],
               ),
               Text(
                 '${(goal.progress * 100).toStringAsFixed(0)}%',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink),
               ),
             ],
           ),

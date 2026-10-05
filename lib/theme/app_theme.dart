@@ -1,60 +1,83 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Central color palette — matches the app icon/logo mark.
-class AppColors {
-  static const bg = Color(0xFFF6F5F1);
-  static const card = Colors.white;
-  static const border = Color(0xFFE7E4DC);
-  static const ink = Color(0xFF2A2A26);
-  static const inkSoft = Color(0xFF6B6A63);
-  static const muted = Color(0xFF9A968C);
+import 'app_theme_presets.dart';
 
-  static const use = Color(0xFFC1666B);
-  static const invest = Color(0xFF2E7D6B);
-  static const lifestyle = Color(0xFFB07D3D);
-  static const emergency = Color(0xFF3A3A86);
-  static const sadaqah = Color(0xFF5C8A62);
+/// Runtime-switchable color accessor. Every screen reads colors through
+/// these getters (e.g. AppColors.ink), so swapping the active preset with
+/// [AppColors.setTheme] re-colors the whole app the next time it rebuilds —
+/// no need to thread the theme through every widget individually.
+///
+/// IMPORTANT: because these are getters, not compile-time constants, any
+/// TextStyle/BoxDecoration/etc. that reads an AppColors.* value cannot be
+/// `const` — it must be a plain (non-const) literal so it re-evaluates
+/// whenever the app rebuilds after a theme change.
+class AppColors {
+  AppColors._();
+
+  static AppThemeOption _current = kThemeBarabri;
+
+  static void setTheme(AppThemeOption theme) => _current = theme;
+  static AppThemeOption get current => _current;
+
+  static Color get bg => _current.bg;
+  static Color get card => _current.card;
+  static Color get border => _current.border;
+  static Color get ink => _current.ink;
+  static Color get inkSoft => _current.inkSoft;
+  static Color get muted => _current.muted;
+
+  static Color get use => _current.use;
+  static Color get invest => _current.invest;
+  static Color get lifestyle => _current.lifestyle;
+  static Color get emergency => _current.emergency;
+  static Color get sadaqah => _current.sadaqah;
 }
 
-ThemeData buildAppTheme() {
+ThemeData buildAppTheme(AppThemeOption option) {
+  AppColors.setTheme(option);
+
   final base = ThemeData(
     useMaterial3: true,
-    colorSchemeSeed: AppColors.invest,
-    scaffoldBackgroundColor: AppColors.bg,
+    brightness: option.isDark ? Brightness.dark : Brightness.light,
+    colorSchemeSeed: option.invest,
+    scaffoldBackgroundColor: option.bg,
   );
 
   final textTheme = GoogleFonts.plusJakartaSansTextTheme(base.textTheme).apply(
-    bodyColor: AppColors.ink,
-    displayColor: AppColors.ink,
+    bodyColor: option.ink,
+    displayColor: option.ink,
   );
 
   return base.copyWith(
     textTheme: textTheme,
     appBarTheme: AppBarTheme(
-      backgroundColor: AppColors.bg,
+      backgroundColor: option.bg,
       elevation: 0,
-      foregroundColor: AppColors.ink,
+      foregroundColor: option.ink,
       titleTextStyle: GoogleFonts.plusJakartaSans(
         fontSize: 18,
         fontWeight: FontWeight.w700,
-        color: AppColors.ink,
+        color: option.ink,
       ),
     ),
     navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: AppColors.card,
+      backgroundColor: option.card,
       labelTextStyle: WidgetStateProperty.resolveWith(
-            (states) => GoogleFonts.plusJakartaSans(
+        (states) => GoogleFonts.plusJakartaSans(
           fontSize: 11,
           fontWeight: states.contains(WidgetState.selected) ? FontWeight.w700 : FontWeight.w500,
-          color: states.contains(WidgetState.selected) ? AppColors.invest : AppColors.muted,
+          color: states.contains(WidgetState.selected) ? option.invest : option.muted,
         ),
       ),
     ),
     switchTheme: SwitchThemeData(
       trackColor: WidgetStateProperty.resolveWith(
-            (states) => states.contains(WidgetState.selected) ? AppColors.invest : AppColors.border,
+        (states) => states.contains(WidgetState.selected) ? option.invest : option.border,
       ),
     ),
+    cardColor: option.card,
+    dialogTheme: DialogThemeData(backgroundColor: option.card),
+    bottomSheetTheme: BottomSheetThemeData(backgroundColor: option.card),
   );
 }
