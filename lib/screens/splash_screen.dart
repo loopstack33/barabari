@@ -52,7 +52,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.bg,
       body: Center(
         child: FadeTransition(
           opacity: _fade,
@@ -61,12 +61,23 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset(
-                  'assets/icon/spLogo.png',
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(32),
+                  child: Image.asset(
+                    'assets/icon/app_icon.png',
+                    width: 128,
+                    height: 128,
+                  ),
                 ),
+                const SizedBox(height: 22),
                 Text(
-                  'Balance your income, on purpose',
-                  style: TextStyle(fontSize: 14, color: AppColors.inkSoft, fontWeight: FontWeight.w600),
+                  'Barabri',
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.ink),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'balance your income, on purpose',
+                  style: TextStyle(fontSize: 12, color: AppColors.inkSoft),
                 ),
               ],
             ),

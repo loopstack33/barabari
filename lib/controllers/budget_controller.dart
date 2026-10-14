@@ -7,6 +7,7 @@ import '../models/breakdown.dart';
 import '../models/budget_entry.dart';
 import '../models/expense.dart';
 import '../models/goal.dart';
+import '../models/payment.dart';
 import '../models/split_percentages.dart';
 import '../theme/app_theme_presets.dart';
 
@@ -17,6 +18,7 @@ class BudgetController extends GetxController {
   static const _splitKey = 'budget_split_v1';
   static const _expensesKey = 'budget_expenses_v1';
   static const _themeKey = 'budget_theme_v1';
+  static const _paymentsKey = 'budget_payments_v1';
 
   /// Current (unsaved) month inputs.
   final grossInput = 0.0.obs;
@@ -36,6 +38,9 @@ class BudgetController extends GetxController {
 
   /// Logged spending history entries.
   final expenses = <Expense>[].obs;
+
+  /// Pending / paid payments with details.
+  final payments = <Payment>[].obs;
 
   final isLoading = true.obs;
 
@@ -87,6 +92,11 @@ class BudgetController extends GetxController {
       expensesRaw.map((e) => Expense.fromJson(jsonDecode(e) as Map<String, dynamic>)),
     );
 
+    final paymentsRaw = _prefs?.getStringList(_paymentsKey) ?? <String>[];
+    payments.assignAll(
+      paymentsRaw.map((e) => Payment.fromJson(jsonDecode(e) as Map<String, dynamic>)),
+    );
+
     final splitRaw = _prefs?.getString(_splitKey);
     if (splitRaw != null) {
       splitPercentages.value =
@@ -126,6 +136,13 @@ class BudgetController extends GetxController {
     await _prefs?.setStringList(
       _expensesKey,
       expenses.map((e) => jsonEncode(e.toJson())).toList(),
+    );
+  }
+
+  Future<void> _persistPayments() async {
+    await _prefs?.setStringList(
+      _paymentsKey,
+      payments.map((e) => jsonEncode(e.toJson())).toList(),
     );
   }
 
@@ -195,20 +212,39 @@ class BudgetController extends GetxController {
     _persistGoals();
   }
 
-  void contributeToGoal(String id, double amount) {
+  void contributeToGoal(String id, double amount, {String? note}) {
     final goal = _findGoal(id);
     if (goal == null || amount <= 0) return;
     goal.saved += amount;
+    _logGoalTx(goal, amount, true, note);
     goals.refresh();
     _persistGoals();
   }
 
-  void withdrawFromGoal(String id, double amount) {
+  void withdrawFromGoal(String id, double amount, {String? note}) {
     final goal = _findGoal(id);
     if (goal == null || amount <= 0) return;
-    goal.saved = (goal.saved - amount) < 0 ? 0 : goal.saved - amount;
+    // Never withdraw more than what is saved; log the actual amount taken out.
+    final actual = amount > goal.saved ? goal.saved : amount;
+    if (actual <= 0) return;
+    goal.saved -= actual;
+    _logGoalTx(goal, actual, false, note);
     goals.refresh();
     _persistGoals();
+  }
+
+  void _logGoalTx(Goal goal, double amount, bool isDeposit, String? note) {
+    goal.transactions.insert(
+      0,
+      GoalTransaction(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        date: DateTime.now(),
+        amount: amount,
+        isDeposit: isDeposit,
+        balanceAfter: goal.saved,
+        note: (note != null && note.trim().isNotEmpty) ? note.trim() : null,
+      ),
+    );
   }
 
   void deleteGoal(String id) {
@@ -280,4 +316,87 @@ class BudgetController extends GetxController {
     }
     return totals;
   }
+
+  // ------------------------------------------------------------- payments
+
+  String? _clean(String? v) => (v != null && v.trim().isNotEmpty) ? v.trim() : null;
+
+  void addPayment({
+    required String title,
+    required double amount,
+    String? party,
+    String? details,
+    DateTime? dueDate,
+    bool isPaid = false,
+  }) {
+    if (title.trim().isEmpty || amount <= 0) return;
+    payments.insert(
+      0,
+      Payment(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        title: title.trim(),
+        amount: amount,
+        party: _clean(party),
+        details: _clean(details),
+        dueDate: dueDate,
+        isPaid: isPaid,
+        paidDate: isPaid ? DateTime.now() : null,
+        createdAt: DateTime.now(),
+      ),
+    );
+    _persistPayments();
+  }
+
+  void updatePayment(
+    String id, {
+    required String title,
+    required double amount,
+    String? party,
+    String? details,
+    DateTime? dueDate,
+  }) {
+    final i = payments.indexWhere((p) => p.id == id);
+    if (i < 0 || title.trim().isEmpty || amount <= 0) return;
+    final old = payments[i];
+    payments[i] = Payment(
+      id: old.id,
+      title: title.trim(),
+      amount: amount,
+      party: _clean(party),
+      details: _clean(details),
+      dueDate: dueDate,
+      isPaid: old.isPaid,
+      paidDate: old.paidDate,
+      createdAt: old.createdAt,
+    );
+    _persistPayments();
+  }
+
+  void setPaymentPaid(String id, bool paid) {
+    final i = payments.indexWhere((p) => p.id == id);
+    if (i < 0) return;
+    final old = payments[i];
+    payments[i] = Payment(
+      id: old.id,
+      title: old.title,
+      amount: old.amount,
+      party: old.party,
+      details: old.details,
+      dueDate: old.dueDate,
+      isPaid: paid,
+      paidDate: paid ? DateTime.now() : null,
+      createdAt: old.createdAt,
+    );
+    _persistPayments();
+  }
+
+  void deletePayment(String id) {
+    payments.removeWhere((p) => p.id == id);
+    _persistPayments();
+  }
+
+  double get pendingTotal =>
+      payments.where((p) => !p.isPaid).fold(0.0, (s, p) => s + p.amount);
+  double get paidTotal =>
+      payments.where((p) => p.isPaid).fold(0.0, (s, p) => s + p.amount);
 }

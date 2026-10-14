@@ -166,7 +166,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Row(
             children: [
               Expanded(
-                flex: 2,
                 child: OutlinedButton(
                   onPressed: () {
                     setState(() {
@@ -179,7 +178,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: const Text('Reset to 50/20/20/10'),
                 ),
               ),
-              const SizedBox(width: 5),
+              const SizedBox(width: 10),
               Expanded(
                 child: FilledButton(
                   style: FilledButton.styleFrom(backgroundColor: AppColors.invest),

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 import '../controllers/budget_controller.dart';
 import '../models/goal.dart';
 import '../theme/app_theme.dart';
+import '../utils/currency.dart';
 import '../widgets/animated_amount.dart';
 import '../widgets/animated_progress_bar.dart';
 import '../widgets/fade_slide_in.dart';
@@ -20,8 +22,8 @@ class GoalsScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: AppColors.invest,
         onPressed: () => _showAddGoalSheet(context, controller),
-        icon: const Icon(Icons.add,color: Colors.white,),
-        label: const Text('New goal',style: TextStyle(color: Colors.white,),),
+        icon: const Icon(Icons.add),
+        label: const Text('New goal'),
       ),
       body: Obx(() {
         if (controller.goals.isEmpty) {
@@ -186,8 +188,10 @@ class _GoalCard extends StatelessWidget {
                 icon: Icon(Icons.more_vert, size: 20, color: AppColors.muted),
                 onSelected: (v) {
                   if (v == 'delete') controller.deleteGoal(goal.id);
+                  if (v == 'history') _showHistorySheet(context);
                 },
                 itemBuilder: (_) => const [
+                  PopupMenuItem(value: 'history', child: Text('View history')),
                   PopupMenuItem(value: 'delete', child: Text('Delete goal')),
                 ],
               ),
@@ -239,22 +243,127 @@ class _GoalCard extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 4),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () => _showHistorySheet(context),
+              icon: const Icon(Icons.history, size: 16),
+              label: Text('History (${goal.transactions.length})'),
+            ),
+          ),
         ],
       ),
     );
   }
 
+  void _showHistorySheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.6,
+          maxChildSize: 0.9,
+          minChildSize: 0.35,
+          builder: (_, scroll) {
+            return Obx(() {
+              final g = controller.goals.firstWhereOrNull((x) => x.id == goal.id);
+              final txs = g?.transactions ?? <GoalTransaction>[];
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
+                    child: Text(
+                      '${goal.name} · history',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.ink),
+                    ),
+                  ),
+                  Expanded(
+                    child: txs.isEmpty
+                        ? Center(
+                            child: Text(
+                              'No add-fund or withdraw actions yet',
+                              style: TextStyle(fontSize: 13, color: AppColors.inkSoft),
+                            ),
+                          )
+                        : ListView.separated(
+                            controller: scroll,
+                            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                            itemCount: txs.length,
+                            separatorBuilder: (_, __) => Divider(height: 1, color: AppColors.border),
+                            itemBuilder: (_, i) {
+                              final t = txs[i];
+                              final color = t.isDeposit ? AppColors.invest : AppColors.sadaqah;
+                              return ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: CircleAvatar(
+                                  backgroundColor: color.withValues(alpha: 0.12),
+                                  child: Icon(
+                                    t.isDeposit ? Icons.arrow_downward : Icons.arrow_upward,
+                                    color: color,
+                                    size: 18,
+                                  ),
+                                ),
+                                title: Text(
+                                  '${t.isDeposit ? '+' : '-'} ${formatPkr(t.amount)}',
+                                  style: TextStyle(fontWeight: FontWeight.w700, color: color),
+                                ),
+                                subtitle: Text(
+                                  '${DateFormat('d MMM yyyy, h:mm a').format(t.date)}'
+                                  '${t.note != null ? '\n${t.note}' : ''}',
+                                  style: TextStyle(fontSize: 12, color: AppColors.inkSoft),
+                                ),
+                                isThreeLine: t.note != null,
+                                trailing: Text(
+                                  'Bal ${formatPkr(t.balanceAfter)}',
+                                  style: TextStyle(fontSize: 11, color: AppColors.muted),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              );
+            });
+          },
+        );
+      },
+    );
+  }
+
   void _showContributeDialog(BuildContext context, {required bool add}) {
     final amountCtrl = TextEditingController();
+    final noteCtrl = TextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(add ? 'Add funds to "${goal.name}"' : 'Withdraw from "${goal.name}"'),
-        content: TextField(
-          controller: amountCtrl,
-          autofocus: true,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: const InputDecoration(prefixText: 'PKR ', border: OutlineInputBorder()),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: amountCtrl,
+              autofocus: true,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(prefixText: 'PKR ', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: noteCtrl,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(
+                labelText: 'Note (optional)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
@@ -262,9 +371,9 @@ class _GoalCard extends StatelessWidget {
             onPressed: () {
               final amount = double.tryParse(amountCtrl.text) ?? 0;
               if (add) {
-                controller.contributeToGoal(goal.id, amount);
+                controller.contributeToGoal(goal.id, amount, note: noteCtrl.text);
               } else {
-                controller.withdrawFromGoal(goal.id, amount);
+                controller.withdrawFromGoal(goal.id, amount, note: noteCtrl.text);
               }
               Navigator.pop(ctx);
             },

@@ -6,6 +6,7 @@ import 'dashboard_screen.dart';
 import 'expenses_screen.dart';
 import 'goals_screen.dart';
 import 'history_screen.dart';
+import 'payments_screen.dart';
 import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -18,12 +19,13 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _index = 0;
 
-  static const _titles = ['Dashboard', 'Spending', 'Goals', 'History'];
+  static const _titles = ['Dashboard', 'Spending', 'Goals', 'Payments', 'History'];
 
   static const _screens = [
     DashboardScreen(),
     ExpensesScreen(),
     GoalsScreen(),
+    PaymentsScreen(),
     HistoryScreen(),
   ];
 
@@ -56,6 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
           NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: 'Dashboard'),
           NavigationDestination(icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: 'Spending'),
           NavigationDestination(icon: Icon(Icons.flag_outlined), selectedIcon: Icon(Icons.flag), label: 'Goals'),
+          NavigationDestination(icon: Icon(Icons.account_balance_wallet_outlined), selectedIcon: Icon(Icons.account_balance_wallet), label: 'Payments'),
           NavigationDestination(icon: Icon(Icons.history_outlined), selectedIcon: Icon(Icons.history), label: 'History'),
         ],
       ),

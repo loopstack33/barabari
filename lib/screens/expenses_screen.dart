@@ -32,8 +32,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: AppColors.invest,
         onPressed: () => _showAddExpenseSheet(context),
-        icon: const Icon(Icons.add,color: Colors.white,),
-        label: const Text('Add spend',style: TextStyle(color: Colors.white,),),
+        icon: const Icon(Icons.add),
+        label: const Text('Add spend'),
       ),
       body: Obx(() {
         final dayExpenses = controller.expensesForDay(_selectedDay);
