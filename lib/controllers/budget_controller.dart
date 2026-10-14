@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:crypto/crypto.dart';
+
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -399,4 +401,92 @@ class BudgetController extends GetxController {
       payments.where((p) => !p.isPaid).fold(0.0, (s, p) => s + p.amount);
   double get paidTotal =>
       payments.where((p) => p.isPaid).fold(0.0, (s, p) => s + p.amount);
+
+  // --------------------------------------------------------- backup / restore
+
+  static const backupFormatVersion = 1;
+
+  String _checksum(String payloadJson) =>
+      sha256.convert(utf8.encode(payloadJson)).toString();
+
+  Map<String, dynamic> _buildPayload() => {
+        'current': {'gross': grossInput.value, 'perks': perksInput.value},
+        'split': splitPercentages.value.toJson(),
+        'theme': activeTheme.value.id,
+        'history': history.map((e) => e.toJson()).toList(),
+        'goals': goals.map((e) => e.toJson()).toList(),
+        'expenses': expenses.map((e) => e.toJson()).toList(),
+        'payments': payments.map((e) => e.toJson()).toList(),
+      };
+
+  /// Full backup as a JSON string: a versioned envelope + checksum around
+  /// every piece of app data.
+  String exportBackupJson() {
+    final payload = _buildPayload();
+    return const JsonEncoder.withIndent('  ').convert({
+      'app': 'barabri',
+      'formatVersion': backupFormatVersion,
+      'exportedAtUtc': DateTime.now().toUtc().toIso8601String(),
+      'checksum': _checksum(jsonEncode(payload)),
+      'payload': payload,
+    });
+  }
+
+  /// Restores from a backup JSON string, replacing ALL current data.
+  /// Everything is parsed and validated first; nothing is touched unless the
+  /// whole file is valid. Returns null on success, or an error message.
+  Future<String?> importBackupJson(String raw) async {
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map<String, dynamic> || decoded['app'] != 'barabri') {
+        return 'This is not a Barabri backup file.';
+      }
+      final version = decoded['formatVersion'];
+      if (version is! int || version > backupFormatVersion) {
+        return 'This backup was made by a newer version of the app. Please update Barabri first.';
+      }
+      final payload = decoded['payload'];
+      if (payload is! Map<String, dynamic>) return 'Backup is missing its data.';
+      if (decoded['checksum'] != _checksum(jsonEncode(payload))) {
+        return 'Backup file is damaged or was edited (checksum mismatch).';
+      }
+
+      List<T> parse<T>(String key, T Function(Map<String, dynamic>) f) =>
+          ((payload[key] as List?) ?? const [])
+              .map((e) => f(e as Map<String, dynamic>))
+              .toList();
+
+      // Stage everything before applying.
+      final newHistory = parse('history', BudgetEntry.fromJson);
+      final newGoals = parse('goals', Goal.fromJson);
+      final newExpenses = parse('expenses', Expense.fromJson);
+      final newPayments = parse('payments', Payment.fromJson);
+      final cur = (payload['current'] as Map<String, dynamic>?) ?? {};
+      final newSplit = payload['split'] is Map<String, dynamic>
+          ? SplitPercentages.fromJson(payload['split'] as Map<String, dynamic>)
+          : SplitPercentages.defaultSplit;
+      final themeId = payload['theme'] as String?;
+
+      // Apply.
+      grossInput.value = (cur['gross'] as num?)?.toDouble() ?? 0;
+      perksInput.value = (cur['perks'] as num?)?.toDouble() ?? 0;
+      splitPercentages.value = newSplit;
+      if (themeId != null) activeTheme.value = themeById(themeId);
+      history.assignAll(newHistory);
+      goals.assignAll(newGoals);
+      expenses.assignAll(newExpenses);
+      payments.assignAll(newPayments);
+
+      await _persistCurrent();
+      await _persistSplit();
+      if (themeId != null) await _prefs?.setString(_themeKey, activeTheme.value.id);
+      await _persistHistory();
+      await _persistGoals();
+      await _persistExpenses();
+      await _persistPayments();
+      return null;
+    } catch (_) {
+      return 'Could not read this file. Is it a valid Barabri backup?';
+    }
+  }
 }

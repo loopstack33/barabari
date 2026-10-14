@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 import '../utils/route_transitions.dart';
+import 'backup_screen.dart';
 import 'dashboard_screen.dart';
 import 'expenses_screen.dart';
 import 'goals_screen.dart';
@@ -36,6 +37,11 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text(_titles[_index]),
         centerTitle: false,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.cloud_upload_outlined),
+            tooltip: 'Backup & restore',
+            onPressed: () => Navigator.of(context).push(fadeScaleRoute(const BackupScreen())),
+          ),
           IconButton(
             icon: const Icon(Icons.tune),
             tooltip: 'Adjust split',
